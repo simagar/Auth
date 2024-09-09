@@ -1,32 +1,31 @@
-import { useAuthStore } from "@/stores/auth.store";
 export default defineNuxtRouteMiddleware((to, from) => {
-  if (!import.meta.server) {
+  if (import.meta.client) {
     const authStore = useAuthStore();
     const user = authStore.getUser;
 
-    // if (to?.meta?.roleCheck) {
-    //   if (user) {
-    //     if (user.roles[0]?.name === "User") {
-    //       return navigateTo("/parents", { external: true });
-    //     } else if (user.roles[0]?.name === "Driver") {
-    //       return navigateTo("/drivers/home", { external: true });
-    //     }
-    //   }
-    // }
+    // Handle role-based redirection
+    if (to.meta.roleCheck && user) {
+      const role = user.roles[0]?.name;
+      if (role === "User") {
+        return navigateTo("/parents", { external: true });
+      } else if (role === "Driver") {
+        return navigateTo("/drivers/home", { external: true });
+      }
+    }
 
-    if (to?.meta?.auth) {
-      if (user) {
-        if (checkUserRole(user, to.meta.role)) {
-          navigateTo(to.path);
-        }
-      } else return navigateTo("/login");
-    } else if (!to?.meta?.auth) {
-      // @ts-ignore
-      navigateTo(to.path);
+    // Handle authenticated routes
+    if (to.meta.auth) {
+      if (!user) {
+        return navigateTo("/login");
+      }
+      if (!checkUserRole(user, to.meta.role)) {
+        return navigateTo("/unauthorized"); // Optional: redirect if user role does not match
+      }
     }
   }
 });
+
+// Utility function to check user role
 function checkUserRole(user, pageRole) {
-  let idx = user.roles.findLastIndex((e) => e.name === pageRole);
-  return idx > -1;
+  return user.roles.some((role) => role.name === pageRole);
 }
