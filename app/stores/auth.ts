@@ -149,7 +149,7 @@ export const useAuthStore = defineStore("_auth", {
     },
   },
   persist: {
-    storage: piniaPluginPersistedstate.localStorage,
+    storage: piniaPluginPersistedstate.localStorage(),
     pick: ["isLoggedIn", "token", "user"],
   },
 });
